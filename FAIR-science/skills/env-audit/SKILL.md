@@ -73,3 +73,20 @@ Summarize clearly: what was audited, what's missing/unused/unpinned, whether the
 passed or failed, and — if something failed — the one concrete next step (usually: add the
 missing package to the right file, or run "conda-manager" to rebuild it properly). Don't just
 dump raw script output; translate it into what the user should actually do next.
+
+## Step 4: Offer to fix missing dependencies
+
+If Step 2 found missing packages, don't stop at reporting them — ask the user whether they want
+you to add them to the environment file now. Give them the actual choice, not just a fait
+accompli:
+
+- **Install now** — add the missing entries to the right `dependencies:` list (root
+  `environment.yml` or the specific `envs/*.yml`) and, if the user also wants it verified, rerun
+  `scripts/verify_fresh_env.sh` against the updated file to confirm it actually builds.
+- **Just show me the command** — print the exact lines/command to add (e.g. the `dependencies:`
+  entries to paste in, or the equivalent `conda install -n <env> -c bioconda -c conda-forge
+  <pkgs>`) and let the user run it themselves.
+
+Never edit the file or run an install without the user picking one of these first — this is the
+one step in the skill that changes repo state or installs packages, so treat it like any other
+action with a real (if small) blast radius.
