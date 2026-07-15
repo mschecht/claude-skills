@@ -1,0 +1,8 @@
+{
+  "name": "FAIR-science",
+  "description": "Skills for building reproducible, FAIR data-analysis repos for computational biology: scaffold a repo with a Snakemake pipeline and conda environments (setup-repo), audit environment reproducibility (env-audit), verify the pipeline actually regenerates figures from raw data (reproduce), and audit against the FAIR data principles (fair-audit).",
+  "version": "1.0.0",
+  "author": {
+    "name": "Matt Schechter"
+  }
+}

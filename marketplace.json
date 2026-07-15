@@ -1,0 +1,14 @@
+{
+  "name": "mschechter-claude-skills",
+  "owner": {
+    "name": "Matt Schechter"
+  },
+  "plugins": [
+    {
+      "name": "FAIR-science",
+      "source": "./FAIR-science",
+      "description": "Scaffold, audit, and verify reproducible/FAIR data-analysis repos for computational biology: setup-repo, env-audit, reproduce, fair-audit.",
+      "version": "1.0.0"
+    }
+  ]
+}
