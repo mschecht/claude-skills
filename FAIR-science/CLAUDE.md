@@ -6,10 +6,14 @@ layout: `data/raw|processed|figure|final`, `code/process|figures`, `Snakefile`,
 `environment.yml` + `envs/`, `notebooks/analysis.md`, `CLAUDE.md`. Skills live under `skills/`,
 one folder per skill, each with a `SKILL.md` and, where useful, a bundled `scripts/`.
 
-This repo (`claude-skills`, the parent of this plugin folder) is a **marketplace**: its root
-`marketplace.json` lists this plugin by path. Unrelated future plugins get their own sibling
-folder at the repo root with their own `.claude-plugin/plugin.json`, added as a new entry in the
-same `marketplace.json` — they don't belong inside `FAIR-science/`.
+This repo (`claude-skills`, the parent of this plugin folder) is a **marketplace**: its
+`.claude-plugin/marketplace.json` lists this plugin by path — note the marketplace manifest
+lives inside a `.claude-plugin/` wrapper at the repo root, the same convention a plugin's own
+`plugin.json` uses, not bare at the repo root (an earlier version of this file got that wrong;
+`/plugin marketplace add` against the real GitHub remote failed with "Marketplace file not found"
+until it was moved). Unrelated future plugins get their own sibling folder at the repo root with
+their own `.claude-plugin/plugin.json`, added as a new entry in the same
+`.claude-plugin/marketplace.json` — they don't belong inside `FAIR-science/`.
 
 ## The skills
 
