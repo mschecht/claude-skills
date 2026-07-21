@@ -9,6 +9,12 @@
       "source": "./FAIR-science",
       "description": "Scaffold, audit, and verify reproducible/FAIR data-analysis repos for computational biology: setup-repo, env-audit, reproduce, fair-audit.",
       "version": "1.0.0"
+    },
+    {
+      "name": "hpc-jupyter-vscode",
+      "source": "./hpc-jupyter-vscode",
+      "description": "Launches a JupyterLab server on a SLURM compute node (via sbatch) and tunnels it to VSCode as a remote Jupyter kernel, with an idle-timeout safety net.",
+      "version": "1.0.0"
     }
   ]
 }
