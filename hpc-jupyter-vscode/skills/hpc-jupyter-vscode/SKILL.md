@@ -19,10 +19,60 @@ Launch JupyterLab on a SLURM compute node and connect VSCode to it as a
 remote kernel, without the user having to babysit job output or hand-build
 an SSH tunnel.
 
+## Prerequisites
+
+This skill runs `sbatch`/`squeue`/`ssh <compute-node>` directly — it does
+**not** SSH into the cluster on your behalf. The environment this skill runs
+in must already be connected to the cluster's **login node**: either
+
+- VSCode connected to the login node via the **Remote-SSH** extension, with
+  Claude Code running inside that remote window, or
+- An interactive terminal already SSH'd into the login node, running Claude
+  Code there.
+
+This also explains the URL this skill prints: `http://localhost:8889/?token=...`
+refers to `localhost` **on the login node**, not the user's laptop. It only
+becomes reachable in the user's actual VSCode because a Remote-SSH connection
+auto-forwards ports it detects on the remote host back to the local machine.
+If you're not running in a session connected to the cluster, none of this
+works — `sbatch` won't even be on `PATH`. In that case, tell the user to open
+VSCode connected to the cluster via Remote-SSH (or an equivalent SSH session)
+first, rather than trying to work around it.
+
 ## Configuration
 
-This skill needs to know which SLURM **partition** and **account** to submit
-to — these are specific to each cluster/lab and have no sensible default.
+New user, nothing configured yet? Gather everything below **in one pass**
+before running the launch script — don't run it, hit one missing-value
+error, ask, retry, hit the next error, and repeat. You need:
+
+- **SLURM partition** and **account** — cluster-specific, no sensible
+  default. If the user doesn't know theirs offhand, help them find it (next
+  section) rather than sending them off to look it up themselves.
+- **Conda environment** with Jupyter installed — see "Conda environment"
+  below.
+
+Once you have them, either pass them as script args/env vars for this one
+launch, or — better for a new user — offer to save them into a durable
+config file (see "Saving your config" below) so future launches don't
+require asking again.
+
+### Finding your partition and account
+
+If the user doesn't already know these, run this on the login node:
+
+```bash
+sacctmgr show associations user=$USER format=Account,Partition%30
+```
+
+This lists every account/partition combination the user is actually
+authorized to submit to — show them the output and ask them to pick, rather
+than guessing one. If `sacctmgr` isn't available or returns nothing (some
+clusters restrict it), fall back to `sinfo -s` for a general partition list
+and ask the user which account their PI/lab uses, or point them at their
+cluster's documentation.
+
+### Setting them
+
 Set them one of two ways:
 
 - Pass them as the 4th and 5th positional args to the launch script, or
@@ -80,7 +130,23 @@ you. Run the launch script from a directory on shared storage (home,
 project, or scratch — whichever is actually shared on the cluster), or set
 `LOG_DIR` explicitly.
 
+### Saving your config for next time
+
+After a session launches successfully, if there's no sign a config file is
+already in use (e.g. `~/.hpc_jupyter.conf` doesn't exist, or the values that
+worked came from one-off args or manually-set env vars), **offer to save
+them** — partition, account, conda env, and any node targeting used — into
+`~/.hpc_jupyter.conf`, using `config.example` as the template. Ask before
+doing it, and ask before adding the `source ~/.hpc_jupyter.conf` line to
+their shell profile (`~/.bashrc`/`~/.zshrc`) — don't edit either silently.
+Once accepted, the next launch on this cluster needs no interview at all.
+
 ## Launching a session
+
+Before running this for the first time in a session (or whenever partition/
+account/conda env aren't already known), complete the Configuration
+interview above first — don't discover missing values one script failure at
+a time.
 
 Run the bundled script:
 

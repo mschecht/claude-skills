@@ -19,6 +19,15 @@ tunnels it to VSCode as a remote Jupyter kernel, without having to hand-build th
 
 (Replace `mschechter/claude-skills` with wherever this repo ends up hosted.)
 
+## Prerequisite: run this connected to the cluster
+
+This skill calls `sbatch`/`squeue`/`ssh <compute-node>` directly — it does not SSH into the
+cluster for you. Claude Code needs to already be running in a session connected to the cluster's
+**login node**: VSCode attached via the **Remote-SSH** extension, or an interactive terminal
+already SSH'd in. That's also why the printed `http://localhost:8889/?token=...` URL works in
+VSCode at all — `localhost` there means the login node, and Remote-SSH is what forwards that port
+back to your actual laptop.
+
 ## Configuration
 
 Needs a SLURM **partition** and **account** to submit to — cluster-specific, no sensible

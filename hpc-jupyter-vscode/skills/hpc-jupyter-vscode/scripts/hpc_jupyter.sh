@@ -118,8 +118,12 @@ else
 fi
 
 if ! command -v sbatch >/dev/null 2>&1; then
-  echo "ERROR: 'sbatch' not found on PATH. Load your cluster's Slurm module first"
-  echo "  (e.g. 'module load slurm') or add it to PATH, then retry."
+  echo "ERROR: 'sbatch' not found on PATH. Two likely causes:"
+  echo "  1. You're on the cluster's login node but the Slurm module isn't loaded"
+  echo "     (e.g. 'module load slurm')."
+  echo "  2. You're not connected to the cluster at all — this script only works"
+  echo "     running on the login node itself (e.g. via VSCode Remote-SSH, or an"
+  echo "     interactive SSH session). It does not SSH in for you."
   exit 1
 fi
 
