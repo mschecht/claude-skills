@@ -36,6 +36,15 @@
 #               happen here, not inside the job. If neither is set, the
 #               script exits with an error asking for one.
 #
+# Job log directory (env var only, no positional arg):
+#   LOG_DIR     directory to write the job's log (hostname + Jupyter token
+#               URL) to. Defaults to the current directory ($PWD) rather
+#               than /tmp, since /tmp is often local, per-node scratch on
+#               HPC clusters — not shared between the login node (where
+#               this script polls the log) and the compute node (where the
+#               job writes it). Must already exist and be writable; the
+#               script does not create it.
+#
 # The job is submitted via sbatch, so it runs as an independent batch job:
 # it keeps running even if this terminal/SSH session closes. Use
 # stop_jupyter.sh <SLURM_JOB_ID> to cancel it.
@@ -47,7 +56,18 @@ PARTITION="${4:-$SLURM_PARTITION}"
 ACCOUNT="${5:-$SLURM_ACCOUNT}"
 IDLE_TIMEOUT="${6:-${JUPYTER_IDLE_TIMEOUT:-7200}}"
 PORT=8889
-LOG="/tmp/jupyter_hpc_%j.log"
+LOG_DIR="${LOG_DIR:-$PWD}"
+
+if [ ! -d "$LOG_DIR" ]; then
+  echo "ERROR: LOG_DIR '$LOG_DIR' does not exist."
+  echo "  Create it first, or set LOG_DIR to an existing directory."
+  exit 1
+fi
+if [ ! -w "$LOG_DIR" ]; then
+  echo "ERROR: LOG_DIR '$LOG_DIR' is not writable."
+  exit 1
+fi
+LOG="$LOG_DIR/jupyter_hpc_%j.log"
 
 if [ -z "$ACCOUNT" ]; then
   echo "ERROR: ACCOUNT is required."
@@ -132,7 +152,7 @@ if [ -z "$JOBID" ]; then
   exit 1
 fi
 
-REAL_LOG="/tmp/jupyter_hpc_${JOBID}.log"
+REAL_LOG="$LOG_DIR/jupyter_hpc_${JOBID}.log"
 echo "SLURM job ID: $JOBID (log: $REAL_LOG)"
 echo "This job runs independently of this terminal — it will keep running"
 echo "even if you close this session."

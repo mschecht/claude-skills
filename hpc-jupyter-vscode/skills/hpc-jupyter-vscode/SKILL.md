@@ -67,6 +67,19 @@ If you skip this and the script isn't given `CONDA_ENV`, it exits with an
 error explaining exactly this — at that point, ask the user and retry rather
 than guessing an environment name.
 
+### Job log location
+
+The job's log (allocated hostname + Jupyter token URL, which this script
+polls to know the session is up) is written to `LOG_DIR/jupyter_hpc_<job_id>.log`.
+`LOG_DIR` defaults to the current directory (`$PWD`) — not `/tmp` — because
+`/tmp` is frequently node-local scratch on HPC clusters, not shared between
+the login node (where this script polls) and the compute node (where the
+job writes). The script checks `LOG_DIR` exists and is writable before
+submitting and errors out otherwise; it does not create the directory for
+you. Run the launch script from a directory on shared storage (home,
+project, or scratch — whichever is actually shared on the cluster), or set
+`LOG_DIR` explicitly.
+
 ## Launching a session
 
 Run the bundled script:
@@ -115,7 +128,7 @@ print:
 Remind the user to hold onto the printed **SLURM job ID** — it's needed to
 stop the session cleanly later, and isn't recoverable after the terminal
 scrolls past it (though it's also embedded in the job's log file path,
-`/tmp/jupyter_hpc_<job_id>.log`).
+`LOG_DIR/jupyter_hpc_<job_id>.log`).
 
 ## Stopping a session
 
@@ -128,7 +141,7 @@ bash scripts/stop_jupyter.sh <SLURM_JOB_ID>
 
 This cancels the SLURM job via `scancel` and closes the local SSH tunnel on
 port 8889. If the user only has the log file path and not the job ID, it's
-embedded in the filename: `/tmp/jupyter_hpc_<job_id>.log`.
+embedded in the filename: `jupyter_hpc_<job_id>.log`.
 
 ## Notes
 
