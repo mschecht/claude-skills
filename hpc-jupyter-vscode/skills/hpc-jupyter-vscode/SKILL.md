@@ -29,7 +29,43 @@ Set them one of two ways:
 - Export `SLURM_PARTITION` and `SLURM_ACCOUNT` in your shell profile so you
   never have to type them.
 
-If neither is set, the script exits with an error rather than guessing.
+If neither is set (and `NODE_CANDIDATES` isn't set either — see below), the
+script exits with an error rather than guessing.
+
+For a durable per-cluster setup, copy `config.example` to somewhere like
+`~/.hpc_jupyter.conf`, fill in your values, and source it from your shell
+profile. It covers everything above plus two optional extras, both env-var
+only (no positional args for these):
+
+- `SLURM_NODELIST_REQUEST` — pin to one specific compute node within
+  `SLURM_PARTITION` (used only if `NODE_CANDIDATES` is unset).
+- `NODE_CANDIDATES` — an ordered, space-separated list of `partition:node`
+  pairs (e.g. `"lbarreiro:midway3-0323 lbarreiro-hm:midway3-0436"`) to try
+  in turn. Takes priority over `SLURM_PARTITION`/`SLURM_NODELIST_REQUEST`.
+  The script moves to the next pair only if `sbatch` itself rejects the
+  submission — a job that's merely `PENDING` is left alone, not skipped.
+
+It also lets you override the script's resource defaults via `DEFAULT_MEM`,
+`DEFAULT_CPUS`, and `DEFAULT_TIME`, so you don't have to pass `MEM`/`CPUS`/
+`TIME` every time either.
+
+### Conda environment
+
+The script needs Jupyter to be on `PATH` in the shell it runs in — `sbatch`
+inherits that shell's environment, so the right conda environment has to be
+active *before* submission, not inside the job. Before running the launch
+script:
+
+1. Check whether a conda environment is already active
+   (`echo $CONDA_DEFAULT_ENV`). If so, nothing to do — the script will use it.
+2. If not, **ask the user which conda environment has Jupyter installed**
+   (suggest `conda env list` if they're not sure) rather than guessing one.
+3. Pass their answer via `CONDA_ENV=<env-name>` when invoking the script, or
+   set it in `config.example`/`~/.hpc_jupyter.conf` for a durable default.
+
+If you skip this and the script isn't given `CONDA_ENV`, it exits with an
+error explaining exactly this — at that point, ask the user and retry rather
+than guessing an environment name.
 
 ## Launching a session
 
@@ -51,18 +87,21 @@ bash scripts/hpc_jupyter.sh 256G 16 8:00:00 my-lab-hm pi-mylab
 ```
 
 What the script does, in order:
-1. Submits the Jupyter job via `sbatch` — an independent batch job that
+1. If no conda environment is already active, activates `CONDA_ENV` (erroring
+   out with instructions to ask the user if it isn't set — see Configuration
+   above).
+2. Submits the Jupyter job via `sbatch` — an independent batch job that
    keeps running even if this terminal or SSH session closes.
-2. Polls `squeue` for the job's state and prints it as it changes
+3. Polls `squeue` for the job's state and prints it as it changes
    (`PENDING` → `RUNNING`); queue wait time is unbounded and depends on
    cluster load, so watch the terminal for updates rather than assuming
    it's stuck.
-3. Once running, polls the job's log for the allocated hostname and the
+4. Once running, polls the job's log for the allocated hostname and the
    Jupyter token URL (bounded to ~2 minutes after the job starts running).
-4. Once both are found, opens a local SSH tunnel (`localhost:8889 ->
+5. Once both are found, opens a local SSH tunnel (`localhost:8889 ->
    <node>:8889`) so the notebook server is reachable from the login node /
    your laptop without needing direct access to the compute node.
-5. Prints the final `http://localhost:8889/?token=...` URL and the SLURM job
+6. Prints the final `http://localhost:8889/?token=...` URL and the SLURM job
    ID.
 
 Tell the user up front that this runs in the background and to watch the

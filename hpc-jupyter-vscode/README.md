@@ -23,8 +23,12 @@ tunnels it to VSCode as a remote Jupyter kernel, without having to hand-build th
 
 Needs a SLURM **partition** and **account** to submit to — cluster-specific, no sensible
 default. Set them via `SLURM_PARTITION` / `SLURM_ACCOUNT` in your shell profile, or pass them as
-script args. See the skill's `SKILL.md` for the full flag list (memory, CPUs, time limit, idle
-timeout).
+script args. For a durable setup, copy
+`skills/hpc-jupyter-vscode/config.example` somewhere like `~/.hpc_jupyter.conf`, fill it in, and
+source it from your shell profile — it also covers optional node pinning
+(`SLURM_NODELIST_REQUEST`), a partition/node fallback list (`NODE_CANDIDATES`), and default
+resource overrides (`DEFAULT_MEM`/`DEFAULT_CPUS`/`DEFAULT_TIME`). See the skill's `SKILL.md` for
+the full details.
 
 ## Why
 

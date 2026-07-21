@@ -1,0 +1,37 @@
+# hpc_jupyter cluster config template.
+#
+# Copy this file somewhere durable (e.g. ~/.hpc_jupyter.conf), fill in your
+# cluster's values, and source it from your shell profile:
+#
+#   cp config.example ~/.hpc_jupyter.conf
+#   echo 'source ~/.hpc_jupyter.conf' >> ~/.bashrc   # or ~/.zshrc
+#
+# Every variable here is optional — hpc_jupyter.sh falls back to its own
+# built-in defaults for anything unset. Only fill in what your cluster/lab
+# actually needs.
+
+# Partition and account to submit to. Required unless NODE_CANDIDATES (below)
+# is set instead.
+export SLURM_PARTITION="lbarreiro"
+export SLURM_ACCOUNT="pi-lbarreiro"
+
+# Pin to one specific compute node within SLURM_PARTITION. Only used if
+# NODE_CANDIDATES is unset.
+export SLURM_NODELIST_REQUEST="midway3-0323"
+
+# Ordered "partition:node" fallback list, space-separated. If set, this
+# takes priority over SLURM_PARTITION/SLURM_NODELIST_REQUEST — hpc_jupyter.sh
+# tries each pair in order and only moves to the next one if sbatch itself
+# rejects the submission (a job that's merely PENDING is left alone, not
+# skipped).
+export NODE_CANDIDATES="lbarreiro:midway3-0323 lbarreiro-hm:midway3-0436"
+
+# Resource defaults, used when hpc_jupyter.sh is run with no positional args.
+export DEFAULT_MEM="64G"
+export DEFAULT_CPUS="8"
+export DEFAULT_TIME="4:00:00"
+
+# Conda environment with Jupyter installed. Required unless a conda env is
+# already active in the shell that runs hpc_jupyter.sh — set this if you'd
+# rather not have to `conda activate` manually every time.
+export CONDA_ENV="myenv"
