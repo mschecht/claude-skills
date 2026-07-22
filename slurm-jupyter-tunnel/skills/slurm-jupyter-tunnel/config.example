@@ -1,10 +1,10 @@
 # hpc_jupyter cluster config template.
 #
-# Copy this file somewhere durable (e.g. ~/.hpc_jupyter.conf), fill in your
+# Copy this file somewhere durable (e.g. ~/.slurm_jupyter_tunnel.conf), fill in your
 # cluster's values, and source it from your shell profile:
 #
-#   cp config.example ~/.hpc_jupyter.conf
-#   echo 'source ~/.hpc_jupyter.conf' >> ~/.bashrc   # or ~/.zshrc
+#   cp config.example ~/.slurm_jupyter_tunnel.conf
+#   echo 'source ~/.slurm_jupyter_tunnel.conf' >> ~/.bashrc   # or ~/.zshrc
 #
 # Every variable here is optional — hpc_jupyter.sh falls back to its own
 # built-in defaults for anything unset. Only fill in what your cluster/lab

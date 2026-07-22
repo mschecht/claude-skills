@@ -1,5 +1,5 @@
 ---
-name: hpc-jupyter-vscode
+name: slurm-jupyter-tunnel
 description: >
   Launches a JupyterLab server on a SLURM compute node and sets up an SSH
   tunnel so it can be attached to as a remote Jupyter kernel from VSCode.
@@ -13,7 +13,7 @@ description: >
   VSCode hookup) that has already been proven to work on SLURM clusters.
 ---
 
-# HPC Jupyter + VSCode
+# Slurm Jupyter Tunnel
 
 Launch JupyterLab on a SLURM compute node and connect VSCode to it as a
 remote kernel, without the user having to babysit job output or hand-build
@@ -39,7 +39,7 @@ works — `sbatch` won't even be on `PATH`. In that case, tell the user to open
 VSCode connected to the cluster via Remote-SSH (or an equivalent SSH session)
 first, rather than trying to work around it.
 
-## Configuration
+## Requirements
 
 New user, nothing configured yet? Gather everything below **in one pass**
 before running the launch script — don't run it, hit one missing-value
@@ -51,10 +51,11 @@ error, ask, retry, hit the next error, and repeat. You need:
 - **Conda environment** with Jupyter installed — see "Conda environment"
   below.
 
-Once you have them, either pass them as script args/env vars for this one
-launch, or — better for a new user — offer to save them into a durable
-config file (see "Saving your config" below) so future launches don't
-require asking again.
+Once you have them, pass them as script args/env vars for this launch. Either
+way, always write them into a durable config file afterward (see
+"Configuration" below) so future launches don't require asking again.
+
+## Configuration
 
 ### Finding your partition and account
 
@@ -83,7 +84,7 @@ If neither is set (and `NODE_CANDIDATES` isn't set either — see below), the
 script exits with an error rather than guessing.
 
 For a durable per-cluster setup, copy `config.example` to somewhere like
-`~/.hpc_jupyter.conf`, fill in your values, and source it from your shell
+`~/.slurm_jupyter_tunnel.conf`, fill in your values, and source it from your shell
 profile. It covers everything above plus two optional extras, both env-var
 only (no positional args for these):
 
@@ -111,7 +112,7 @@ script:
 2. If not, **ask the user which conda environment has Jupyter installed**
    (suggest `conda env list` if they're not sure) rather than guessing one.
 3. Pass their answer via `CONDA_ENV=<env-name>` when invoking the script, or
-   set it in `config.example`/`~/.hpc_jupyter.conf` for a durable default.
+   set it in `config.example`/`~/.slurm_jupyter_tunnel.conf` for a durable default.
 
 If you skip this and the script isn't given `CONDA_ENV`, it exits with an
 error explaining exactly this — at that point, ask the user and retry rather
@@ -132,14 +133,19 @@ project, or scratch — whichever is actually shared on the cluster), or set
 
 ### Saving your config for next time
 
-After a session launches successfully, if there's no sign a config file is
-already in use (e.g. `~/.hpc_jupyter.conf` doesn't exist, or the values that
-worked came from one-off args or manually-set env vars), **offer to save
-them** — partition, account, conda env, and any node targeting used — into
-`~/.hpc_jupyter.conf`, using `config.example` as the template. Ask before
-doing it, and ask before adding the `source ~/.hpc_jupyter.conf` line to
-their shell profile (`~/.bashrc`/`~/.zshrc`) — don't edit either silently.
-Once accepted, the next launch on this cluster needs no interview at all.
+After every successful launch, write (or update) `~/.slurm_jupyter_tunnel.conf`
+with the values that worked — partition, account, conda env, and any node
+targeting used — using `config.example` as the template. Do this
+unconditionally, every launch, not just the first time a config file is
+missing: it's this skill's own file, so keep it current rather than only
+offering to create it once. It's fine to overwrite it silently with the
+latest working values.
+
+Adding the `source ~/.slurm_jupyter_tunnel.conf` line to the user's shell
+profile (`~/.bashrc`/`~/.zshrc`) is different — that edits a file outside
+this skill's own scope, so still ask before doing that, and only do it once.
+Once that line is in place, the next launch on this cluster needs no
+interview at all, since the config file is already kept up to date.
 
 ## Launching a session
 
