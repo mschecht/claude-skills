@@ -30,20 +30,22 @@
 #
 # Conda environment (env var only, no positional arg):
 #   CONDA_ENV   name of the conda environment that has Jupyter installed.
-#               Required unless a conda environment is already active
-#               (CONDA_DEFAULT_ENV set) in the shell running this script —
-#               sbatch inherits this shell's environment, so activation must
-#               happen here, not inside the job. If neither is set, the
-#               script exits with an error asking for one.
+#               Activated whenever it differs from whatever's already active
+#               (CONDA_DEFAULT_ENV) — a base env is active by default in most
+#               shells, so "something is active" doesn't mean the right thing
+#               is active. sbatch inherits this shell's environment, so
+#               activation must happen here, not inside the job. Required
+#               unless a conda environment is already active and CONDA_ENV
+#               is unset — if neither is true, the script exits with an
+#               error asking for one.
 #
 # Job log directory (env var only, no positional arg):
 #   LOG_DIR     directory to write the job's log (hostname + Jupyter token
-#               URL) to. Defaults to the current directory ($PWD) rather
-#               than /tmp, since /tmp is often local, per-node scratch on
-#               HPC clusters — not shared between the login node (where
-#               this script polls the log) and the compute node (where the
-#               job writes it). Must already exist and be writable; the
-#               script does not create it.
+#               URL) to. Defaults to $HOME/.cache/hpc_jupyter rather than
+#               /tmp, since /tmp is often local, per-node scratch on HPC
+#               clusters — not shared between the login node (where this
+#               script polls the log) and the compute node (where the job
+#               writes it). Created automatically if it doesn't exist.
 #
 # The job is submitted via sbatch, so it runs as an independent batch job:
 # it keeps running even if this terminal/SSH session closes. Use
@@ -56,13 +58,8 @@ PARTITION="${4:-$SLURM_PARTITION}"
 ACCOUNT="${5:-$SLURM_ACCOUNT}"
 IDLE_TIMEOUT="${6:-${JUPYTER_IDLE_TIMEOUT:-7200}}"
 PORT=8889
-LOG_DIR="${LOG_DIR:-$PWD}"
-
-if [ ! -d "$LOG_DIR" ]; then
-  echo "ERROR: LOG_DIR '$LOG_DIR' does not exist."
-  echo "  Create it first, or set LOG_DIR to an existing directory."
-  exit 1
-fi
+LOG_DIR="${LOG_DIR:-$HOME/.cache/hpc_jupyter}"
+mkdir -p "$LOG_DIR"
 if [ ! -w "$LOG_DIR" ]; then
   echo "ERROR: LOG_DIR '$LOG_DIR' is not writable."
   exit 1
@@ -79,14 +76,15 @@ fi
 # sbatch inherits this shell's environment (including PATH), so a conda env
 # must be activated here, before submission — activating it inside the job
 # itself would be too late for sbatch to see it.
-if [ -z "$CONDA_DEFAULT_ENV" ]; then
-  if [ -z "$CONDA_ENV" ]; then
-    echo "ERROR: no conda environment is active, and CONDA_ENV is not set."
-    echo "  Ask the user which conda environment has Jupyter installed (they can"
-    echo "  check with 'conda env list'), then re-run with:"
-    echo "    CONDA_ENV=<env-name> bash scripts/hpc_jupyter.sh ..."
-    exit 1
-  fi
+if [ -z "$CONDA_ENV" ] && [ -z "$CONDA_DEFAULT_ENV" ]; then
+  echo "ERROR: no conda environment is active, and CONDA_ENV is not set."
+  echo "  Ask the user which conda environment has Jupyter installed (they can"
+  echo "  check with 'conda env list'), then re-run with:"
+  echo "    CONDA_ENV=<env-name> bash scripts/hpc_jupyter.sh ..."
+  exit 1
+fi
+
+if [ -n "$CONDA_ENV" ] && [ "$CONDA_DEFAULT_ENV" != "$CONDA_ENV" ]; then
   CONDA_BASE=$(conda info --base 2>/dev/null)
   if [ -z "$CONDA_BASE" ] || [ ! -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
     echo "ERROR: could not locate conda (needed to activate CONDA_ENV=$CONDA_ENV)."
@@ -209,7 +207,7 @@ for i in $(seq 1 24); do
       NODE=$(grep "^HOSTNAME:" "$REAL_LOG" 2>/dev/null | head -1 | sed 's/HOSTNAME://')
       [ -n "$NODE" ] && echo "Allocated node: $NODE"
     fi
-    TOKEN_URL=$(grep "http://127.0.0.1:$PORT" "$REAL_LOG" 2>/dev/null | grep "token=" | tail -1 | tr -d ' ')
+    TOKEN_URL=$(grep "http://127.0.0.1:" "$REAL_LOG" 2>/dev/null | grep "token=" | tail -1 | tr -d ' ')
     [ -n "$TOKEN_URL" ] && break
   fi
   sleep 5 &
@@ -225,6 +223,15 @@ fi
 
 CONFIRMED=1
 trap - INT TERM
+
+# Jupyter falls back to another port if $PORT was already in use on that
+# node (e.g. a stale session from a previous run) — use the port it
+# actually bound to, not the one we requested.
+ACTUAL_PORT=$(echo "$TOKEN_URL" | grep -oP '(?<=127\.0\.0\.1:)\d+')
+if [ -n "$ACTUAL_PORT" ] && [ "$ACTUAL_PORT" != "$PORT" ]; then
+  echo "Note: port $PORT was in use on $NODE; Jupyter started on $ACTUAL_PORT"
+  PORT="$ACTUAL_PORT"
+fi
 
 echo "Setting up SSH tunnel: localhost:$PORT -> $NODE:$PORT"
 ssh -f -N -L $PORT:localhost:$PORT "$NODE"

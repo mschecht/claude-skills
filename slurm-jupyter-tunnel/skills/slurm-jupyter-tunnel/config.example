@@ -34,10 +34,10 @@ export DEFAULT_TIME="4:00:00"
 # Conda environment with Jupyter installed. Required unless a conda env is
 # already active in the shell that runs hpc_jupyter.sh — set this if you'd
 # rather not have to `conda activate` manually every time.
-export CONDA_ENV="myenv"
+export CONDA_ENV="snakemake8"
 
-# Directory to write the job's log to. Defaults to the current directory —
-# only set this if you want it somewhere fixed instead. Must already exist,
-# and must be on storage shared between the login node and compute nodes
+# Directory to write the job's log to. Defaults to $HOME/.cache/hpc_jupyter
+# (created automatically) — only set this if you want it somewhere else.
+# Must be on storage shared between the login node and compute nodes
 # (unlike /tmp, which is often node-local scratch on HPC clusters).
 # export LOG_DIR="$HOME/.hpc_jupyter/logs"

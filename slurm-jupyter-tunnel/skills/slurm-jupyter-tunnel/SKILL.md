@@ -122,14 +122,13 @@ than guessing an environment name.
 
 The job's log (allocated hostname + Jupyter token URL, which this script
 polls to know the session is up) is written to `LOG_DIR/jupyter_hpc_<job_id>.log`.
-`LOG_DIR` defaults to the current directory (`$PWD`) — not `/tmp` — because
+`LOG_DIR` defaults to `$HOME/.cache/hpc_jupyter` — not `/tmp` — because
 `/tmp` is frequently node-local scratch on HPC clusters, not shared between
 the login node (where this script polls) and the compute node (where the
-job writes). The script checks `LOG_DIR` exists and is writable before
-submitting and errors out otherwise; it does not create the directory for
-you. Run the launch script from a directory on shared storage (home,
-project, or scratch — whichever is actually shared on the cluster), or set
-`LOG_DIR` explicitly.
+job writes). The script creates `LOG_DIR` automatically if it doesn't
+exist. Override it with `LOG_DIR` if `$HOME` isn't shared storage on your
+cluster (uncommon, but possible) — point it at project or scratch space
+instead.
 
 ### Saving your config for next time
 

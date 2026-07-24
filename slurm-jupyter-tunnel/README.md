@@ -72,7 +72,7 @@ launch, so you shouldn't need to repeat the interview. It'll ask before adding a
 picked up automatically. The file also covers optional node pinning
 (`SLURM_NODELIST_REQUEST`), a partition/node fallback list (`NODE_CANDIDATES`), default resource
 overrides (`DEFAULT_MEM`/`DEFAULT_CPUS`/`DEFAULT_TIME`), and where the job log goes (`LOG_DIR`,
-defaults to the current directory rather than `/tmp` since `/tmp` is often node-local on HPC
+defaults to `$HOME/.cache/hpc_jupyter` rather than `/tmp` since `/tmp` is often node-local on HPC
 clusters). See the skill's `SKILL.md` for the full details.
 
 ## Why
