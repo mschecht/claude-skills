@@ -196,6 +196,12 @@ print:
 2. In VSCode: kernel picker (top right of a notebook) → **Select Another
    Kernel** → **Existing Jupyter Server** → paste the URL.
 
+When relaying this URL back to the user in chat, put it in its own fenced
+code block (triple backticks), not a markdown hyperlink. In the VSCode
+extension environment, a code block renders with a copy-icon button, which
+is what the user actually needs to paste it into the kernel picker — a
+`[text](url)` link only renders as clickable text with no copy affordance.
+
 Remind the user to hold onto the printed **SLURM job ID** — it's needed to
 stop the session cleanly later, and isn't recoverable after the terminal
 scrolls past it (though it's also embedded in the job's log file path,
